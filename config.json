@@ -1,0 +1,44 @@
+﻿{
+  "General": {
+    "AutoStartWithWindows": false,
+    "SyncIntervalMinutes": 60,
+    "CronExpression": "0 0 2 * * ?",
+    "UseCron": true
+  },
+  "CommDefaults": {
+    "Port": 4370,
+    "CommKey": 0,
+    "TimeoutMs": 3000
+  },
+  "IpSources": {
+    "CidrRanges": [
+      "192.168.0.0/24"
+    ],
+    "Mssql": {
+      "Enabled": true,
+      "ConnectionString": "Server=192.168.0.1;Database=attdata;User Id=zk_time_sync;Password=***********;",
+      "QuerySql": "SELECT IP AS Ip, Port, CommPassword AS CommKey, MachineAlias AS Name FROM Machines WHERE Enabled = 1 and MachineAlias not like N'%8888888%' "
+    }
+  },
+  "Devices": [
+    {
+      "Ip": "192.168.233.225",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "666",
+      "LastSyncTime": "",
+      "LastStatus": "未同步"
+    }
+  ],
+  "WeCom": {
+    "Enabled": true,
+    "Mode": "Webhook",
+    "WebhookUrl": "",
+    "AppCorpId": "",
+    "AppCorpSecret": "",
+    "AppAgentId": 888999,
+    "AppToUser": "@all",
+    "CustomHeader": "⏰ 【中控考勤/门禁时间自动同步报告】\n==============================",
+    "CustomFooter": "==============================\n💡 提示：设备时间同步异常请排查。"
+  }
+}
