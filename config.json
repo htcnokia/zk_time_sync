@@ -1,0 +1,417 @@
+﻿{
+  "General": {
+    "AutoStartWithWindows": false,
+    "SyncIntervalMinutes": 60,
+    "CronExpression": "0 0 7,11,13,17 * * ?",
+    "UseCron": true,
+    "SyncOnStartup": true,
+    "StartupSyncDelaySeconds": 30,
+    "StartupSyncGuardMinutes": 5,
+    "BootSyncWindowMinutes": 2
+  },
+  "CommDefaults": {
+    "Port": 4370,
+    "CommKey": 0,
+    "TimeoutMs": 3000
+  },
+  "IpSources": {
+    "CidrRanges": [
+      "192.168.0.0/24"
+    ],
+    "Mssql": {
+      "Enabled": true,
+      "ConnectionString": "Server=192.168.0.4;Database=attdata;User Id=zk_time_sync;Password=zk_time_sync;",
+      "QuerySql": "SELECT IP AS Ip, Port, CommPassword AS CommKey, MachineAlias AS Name,iana as IANA FROM Machines WHERE Enabled = 1 ",
+      "AutoImport": false
+    }
+  },
+  "Devices": [
+    {
+      "Ip": "192.168.3.225",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "62 寫字樓二樓",
+      "LastSyncTime": "2026-09-11 15:09:13",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.8.247",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "28   監控室門口",
+      "LastSyncTime": "2026-09-11 15:09:17",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.2.241",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "61  空",
+      "LastSyncTime": "2026-09-11 15:09:19",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.240",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "67  A2一樓后門",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.246",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "68  A2四樓前門",
+      "LastSyncTime": "2026-09-11 15:09:37",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.239",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "79   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.226",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "80  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.241",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "83  A2棟四樓",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.219",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "85  A2棟三樓中門",
+      "LastSyncTime": "2026-09-11 15:10:24",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.220",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "86   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.216",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "91   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.214",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "93   A2棟二樓前門",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.213",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "94   A2棟一樓前樓梯口",
+      "LastSyncTime": "2026-09-11 15:11:11",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.212",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "95   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.197",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "98  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.133",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "99  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.195",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "59   EVA車間",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.229",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "51   A1棟二樓前門車間內",
+      "LastSyncTime": "2026-09-11 15:12:12",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.4.240",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "45  寫字樓三樓研發中心",
+      "LastSyncTime": "2026-09-11 15:12:16",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.224",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "41  A1棟二樓車間前門外面",
+      "LastSyncTime": "2026-09-11 15:12:20",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.242",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "39  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.245",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "38  A1棟三樓前門",
+      "LastSyncTime": "2026-09-11 15:12:39",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.223",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "37  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.248",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "35  絲印后門",
+      "LastSyncTime": "2026-09-11 15:12:55",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.8.244",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "30  寫字樓右邊",
+      "LastSyncTime": "2026-09-11 15:12:56",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.236",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "21  B1棟五樓前門",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.0.95",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "19  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.193",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "70  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.101.252",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "14 厚街辦公室",
+      "LastSyncTime": "2026-09-11 15:13:40",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.238",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "77  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.2.240",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "56  寫字樓一樓左邊",
+      "LastSyncTime": "2026-09-11 15:13:56",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.211",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "90  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.233",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "96  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.217",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "65  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.194",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "58  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.237",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "82  招工處",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.221",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "92   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.244",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "72  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.218",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "84  B1棟一樓壓制門口",
+      "LastSyncTime": "2026-09-11 15:15:37",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.222",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "89  總務部門口",
+      "LastSyncTime": "2026-09-11 15:15:38",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.4.241",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "16  寫字樓三樓",
+      "LastSyncTime": "2026-09-11 15:15:39",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.243",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "47  宿舍后門",
+      "LastSyncTime": "2026-09-11 15:15:41",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.4.242",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "44   寫字樓研發中心",
+      "LastSyncTime": "2026-09-11 15:15:42",
+      "LastStatus": "同步成功"
+    },
+    {
+      "Ip": "192.168.5.192",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "52  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.150",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "53   空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.169",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "55  空",
+      "LastSyncTime": "",
+      "LastStatus": "连接失败/超时"
+    },
+    {
+      "Ip": "192.168.5.163",
+      "Port": 4370,
+      "CommKey": 0,
+      "Name": "54  B1棟三樓前門",
+      "LastSyncTime": "2026-09-11 15:16:29",
+      "LastStatus": "同步成功"
+    }
+  ],
+  "WeCom": {
+    "Enabled": true,
+    "Mode": "Webhook",
+    "WebhookUrl": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=3c1afc63-80f9-48d6-90b0-0b97fffef2d1",
+    "AppCorpId": "ww7491b90a4fbad1ee",
+    "AppCorpSecret": "_nsis3vmt2Wcggk8nU6T8Dgggx4BzM578-7ju1Dlm1s",
+    "AppAgentId": 1000048,
+    "AppToUser": "@all",
+    "CustomHeader": "⏰ 【中控考勤/门禁时间自动同步报告】by Seco\n==============================",
+    "CustomFooter": "==============================\n💡 提示：设备时间同步异常请排查。"
+  }
+}
