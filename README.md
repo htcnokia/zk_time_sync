@@ -20,7 +20,8 @@
 3. **双运行模式：桌面程序 与 Windows 系统服务（Windows Server 推荐）**
    - **交互桌面模式**：Windows 11 Fluent Design 浅色界面，标准窗口边框，支持一键手工执行、实时日志滚屏、扫描进度条、参数即时保存。
    - **Windows 服务运行**：以 `LocalSystem` 账户后台无头运行，**不依赖任何用户登录**，断电重启后自动拉起并对时。
-   - **服务加固配置**：安装时自动配置 `start= delayed-auto`（延迟自动启动等网络就绪）、`depend= Tcpip/Dnscache`（网络依赖）、failure 动作（崩溃后自动重启）。
+   - **服务加固配置**：安装时自动配置 `delayed-auto` 延迟启动、`Tcpip/Dnscache` 网络依赖、崩溃自动重启，均以 Windows 服务控制管理器 API 直接写入。
+   - **路径兼容**：安装路径直接以 Unicode 字符串传给 `CreateService` API，不走 `sc.exe` 命令行转义，可可靠支持含空格（如 `C:\Program Files (x86)`）或中文字符的安装目录。
    - **冷启动强制对时**：以系统开机时长判定断电恢复，重启后窗口期内（默认 2 分钟）强制执行一次全员对时，不受防重复保护误伤；该机制以 Windows 开机时长为准，即使服务器时钟被重置也可靠。
    - **STA 线程保证**：同步引擎内部强制在 STA 单元创建中控 COM 组件，规避服务/定时线程默认 MTA 导致的调用失败。
    - **服务管理双入口**：图形界面「自动同步」页内置“系统服务”卡片，可一键安装成系统服务（自动 UAC 提权 + 安装 + 启动 + 状态回显）；`service_manager.bat` 提供等价的命令行菜单，适合无界面环境。
@@ -74,6 +75,7 @@ zk_timesync/
     ├── WeComNotifier.cs        # 企业微信群机器人 Webhook 与自建应用 API 推送模块
     ├── MainForm.cs             # Fluent Design 图形化控制台（标准 Windows 窗口）
     ├── MainForm.Service.cs     # 系统服务管理卡片（界面入口 + UAC 提权 + 状态回显）
+    ├── ServiceApiInstaller.cs  # 基于 advapi32 的服务创建器（支持空格/中文路径）
     ├── UiTheme.cs              # Fluent 设计令牌与自绘控件（按钮/卡片/导航/日志台）
     └── Program.cs              # 程序入口、Windows 服务与加固安装器、命令行参数解析
 ```

@@ -333,27 +333,12 @@ namespace ZkTimeSync
                 log.AppendLine("  " + RunSc("delete " + ServiceName));
             }
 
-            // 2) 创建服务：LocalSystem + 自动启动 + 命令行 -service 入口
-            string create = string.Format(
-                "create {0} binPath= \"\\\"{1}\\\" -service\" start= auto obj= LocalSystem DisplayName= \"{2}\"",
-                ServiceName, exePath, DisplayName);
-            log.AppendLine("  " + RunSc(create));
+            // 2) 用 Windows 服务 API 创建服务（LocalSystem + 自动 + 延迟启动 +
+            //    网络依赖 + 失败自动重启 + 描述），路径以 Unicode 直接传入，
+            //    彻底规避 sc.exe 对空格/中文路径的二次解析问题
+            log.AppendLine(ServiceApiInstaller.Create(ServiceName, DisplayName, exePath));
 
-            // 3) 延迟自动启动：等网络与磁盘就绪后再拉起，降低断电重启后抢跑概率
-            log.AppendLine("  " + RunSc("config " + ServiceName + " start= delayed-auto"));
-
-            // 4) 网络依赖：Tcpip + DNS 客户端就绪后才启动
-            log.AppendLine("  " + RunSc("config " + ServiceName + " depend= Tcpip/Dnscache"));
-
-            // 5) 失败自动恢复：异常退出后自动重启，避免一次崩溃后再也不对时
-            log.AppendLine("  " + RunSc("failure " + ServiceName +
-                " reset= 86400 actions= restart/60000/restart/60000/restart/300000"));
-
-            // 6) 描述
-            log.AppendLine("  " + RunSc("description " + ServiceName +
-                " \"中控考勤/门禁时间同步服务；断电重启后无需登录自动对时。\""));
-
-            // 7) 一次提权内完成安装 + 启动 + 检测，避免二次 UAC 弹窗
+            // 3) 一次提权内完成安装 + 启动 + 检测，避免二次 UAC 弹窗
             ServiceState state = GetServiceState();
             if (state == ServiceState.Stopped)
             {
