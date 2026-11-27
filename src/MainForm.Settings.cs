@@ -45,12 +45,13 @@ namespace ZkTimeSync
 
         private Control BuildSchedulePage()
         {
-            TableLayoutPanel page = NewGrid(2, 1, Theme.Bg);
-            AddColumns(page, new float[] { 0f, 0f });
+            TableLayoutPanel page = NewGrid(3, 1, Theme.Bg);
+            AddColumns(page, new float[] { 0f, 0f, 0f });
             AddRows(page, new float[] { 0f });
 
             page.Controls.Add(BuildPlanCard(), 0, 0);
             page.Controls.Add(BuildStartupCard(), 1, 0);
+            page.Controls.Add(BuildServiceCard(), 2, 0);
 
             return page;
         }

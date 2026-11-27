@@ -26,14 +26,36 @@ namespace ZkTimeSync
                     ServiceBase.Run(ServicesToRun);
                     return;
                 }
+                else if (cmd.StartsWith(ServiceInstallerHelper.ElevatedActionPrefix) && args.Length >= 2)
+                {
+                    // GUI 提权子进程：由父进程以 runas 启动，执行后写回结果文件并退出
+                    string action = cmd.Substring(ServiceInstallerHelper.ElevatedActionPrefix.Length);
+                    ServiceInstallerHelper.RunElevatedChild(action, args[1]);
+                    return;
+                }
                 else if (cmd == "install" || cmd == "i")
                 {
-                    ServiceInstallerHelper.InstallService();
+                    Console.WriteLine(ServiceInstallerHelper.InstallService());
                     return;
                 }
                 else if (cmd == "uninstall" || cmd == "u")
                 {
-                    ServiceInstallerHelper.UninstallService();
+                    Console.WriteLine(ServiceInstallerHelper.UninstallService());
+                    return;
+                }
+                else if (cmd == "start")
+                {
+                    Console.WriteLine(ServiceInstallerHelper.StartService());
+                    return;
+                }
+                else if (cmd == "stop")
+                {
+                    Console.WriteLine(ServiceInstallerHelper.StopService());
+                    return;
+                }
+                else if (cmd == "regcom")
+                {
+                    Console.WriteLine(ServiceInstallerHelper.RegisterCom());
                     return;
                 }
                 else if (cmd == "status" || cmd == "st")
@@ -205,10 +227,16 @@ namespace ZkTimeSync
         /// <summary>同步执行 sc.exe 并返回其标准输出/错误（含退出码）</summary>
         private static string RunSc(string arguments)
         {
+            return RunProcess("sc.exe", arguments, 15000);
+        }
+
+        /// <summary>同步执行指定程序并返回其标准输出/错误（含退出码）</summary>
+        private static string RunProcess(string fileName, string arguments, int timeoutMs)
+        {
             try
             {
                 System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo();
-                psi.FileName = "sc.exe";
+                psi.FileName = fileName;
                 psi.Arguments = arguments;
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = true;
@@ -219,14 +247,14 @@ namespace ZkTimeSync
                 {
                     string output = p.StandardOutput.ReadToEnd();
                     string error = p.StandardError.ReadToEnd();
-                    p.WaitForExit(15000);
+                    p.WaitForExit(timeoutMs);
                     string combined = (output + " " + error).Trim();
                     return combined + " [exit=" + p.ExitCode + "]";
                 }
             }
             catch (Exception ex)
             {
-                return "执行 sc.exe 失败: " + ex.Message;
+                return "执行 " + fileName + " 失败: " + ex.Message;
             }
         }
 
@@ -236,52 +264,248 @@ namespace ZkTimeSync
             return RunSc("query " + ServiceName);
         }
 
-        public static void InstallService()
+        /// <summary>返回服务运行状态枚举，供界面图标/文案使用</summary>
+        public enum ServiceState
         {
+            NotInstalled,
+            Running,
+            Stopped,
+            Unknown
+        }
+
+        /// <summary>用 ServiceController 精确读取状态，不依赖 sc.exe 文本解析</summary>
+        public static ServiceState GetServiceState()
+        {
+            try
+            {
+                using (ServiceController sc = new ServiceController(ServiceName))
+                {
+                    switch (sc.Status)
+                    {
+                        case ServiceControllerStatus.Running: return ServiceState.Running;
+                        case ServiceControllerStatus.Stopped: return ServiceState.Stopped;
+                        default: return ServiceState.Unknown;
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // 服务不存在时 ServiceController 构造或访问 Status 抛此异常
+                return ServiceState.NotInstalled;
+            }
+            catch (Exception)
+            {
+                return ServiceState.Unknown;
+            }
+        }
+
+        /// <summary>当前进程是否具备管理员权限</summary>
+        public static bool IsAdministrator()
+        {
+            try
+            {
+                System.Security.Principal.WindowsIdentity identity =
+                    System.Security.Principal.WindowsIdentity.GetCurrent();
+                System.Security.Principal.WindowsPrincipal principal =
+                    new System.Security.Principal.WindowsPrincipal(identity);
+                return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>安装服务，返回结果文本（供命令行与 GUI 提权共用）</summary>
+        public static string InstallService()
+        {
+            System.Text.StringBuilder log = new System.Text.StringBuilder();
             string exePath = Application.ExecutablePath;
-            Console.WriteLine("正在安装/修复系统服务 " + ServiceName + " ...");
+            log.AppendLine("正在安装/修复系统服务 " + ServiceName + " ...");
 
             // 1) 若服务已存在先停止并删除，保证安装幂等（重复安装不会残留旧 binPath）
             string q = RunSc("query " + ServiceName);
             if (q.IndexOf("STATE", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 q.IndexOf("SERVICE_NAME", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                Console.WriteLine("检测到已存在的服务，先停止并删除...");
-                Console.WriteLine("  " + RunSc("stop " + ServiceName));
-                Console.WriteLine("  " + RunSc("delete " + ServiceName));
+                log.AppendLine("检测到已存在的服务，先停止并删除...");
+                log.AppendLine("  " + RunSc("stop " + ServiceName));
+                log.AppendLine("  " + RunSc("delete " + ServiceName));
             }
 
             // 2) 创建服务：LocalSystem + 自动启动 + 命令行 -service 入口
             string create = string.Format(
                 "create {0} binPath= \"\\\"{1}\\\" -service\" start= auto obj= LocalSystem DisplayName= \"{2}\"",
                 ServiceName, exePath, DisplayName);
-            Console.WriteLine("  " + RunSc(create));
+            log.AppendLine("  " + RunSc(create));
 
             // 3) 延迟自动启动：等网络与磁盘就绪后再拉起，降低断电重启后抢跑概率
-            Console.WriteLine("  " + RunSc("config " + ServiceName + " start= delayed-auto"));
+            log.AppendLine("  " + RunSc("config " + ServiceName + " start= delayed-auto"));
 
             // 4) 网络依赖：Tcpip + DNS 客户端就绪后才启动
-            Console.WriteLine("  " + RunSc("config " + ServiceName + " depend= Tcpip/Dnscache"));
+            log.AppendLine("  " + RunSc("config " + ServiceName + " depend= Tcpip/Dnscache"));
 
             // 5) 失败自动恢复：异常退出后自动重启，避免一次崩溃后再也不对时
-            Console.WriteLine("  " + RunSc("failure " + ServiceName +
+            log.AppendLine("  " + RunSc("failure " + ServiceName +
                 " reset= 86400 actions= restart/60000/restart/60000/restart/300000"));
 
             // 6) 描述
-            Console.WriteLine("  " + RunSc("description " + ServiceName +
+            log.AppendLine("  " + RunSc("description " + ServiceName +
                 " \"中控考勤/门禁时间同步服务；断电重启后无需登录自动对时。\""));
 
-            Console.WriteLine("服务安装命令已执行完毕。当前状态：");
-            Console.WriteLine("  " + QueryStatus());
-            Console.WriteLine("如未运行，请执行：net start " + ServiceName);
+            // 7) 一次提权内完成安装 + 启动 + 检测，避免二次 UAC 弹窗
+            ServiceState state = GetServiceState();
+            if (state == ServiceState.Stopped)
+            {
+                log.AppendLine("正在启动服务...");
+                log.AppendLine("  " + RunSc("start " + ServiceName));
+                state = GetServiceState();
+            }
+            log.AppendLine("安装命令执行完毕。当前状态：" + StateText(state));
+            log.AppendLine(state == ServiceState.Running
+                ? "服务已在运行，断电重启后将自动对时。"
+                : "服务尚未运行，可执行 -start 启动，或重启服务器后自动运行。");
+            return log.ToString();
         }
 
-        public static void UninstallService()
+        /// <summary>卸载服务，返回结果文本</summary>
+        public static string UninstallService()
         {
-            Console.WriteLine("正在停止并卸载系统服务 " + ServiceName + " ...");
-            Console.WriteLine("  " + RunSc("stop " + ServiceName));
-            Console.WriteLine("  " + RunSc("delete " + ServiceName));
-            Console.WriteLine("服务卸载命令已执行完毕。");
+            System.Text.StringBuilder log = new System.Text.StringBuilder();
+            log.AppendLine("正在停止并卸载系统服务 " + ServiceName + " ...");
+            log.AppendLine("  " + RunSc("stop " + ServiceName));
+            log.AppendLine("  " + RunSc("delete " + ServiceName));
+            log.AppendLine("卸载命令执行完毕。当前状态：" + StateText(GetServiceState()));
+            return log.ToString();
+        }
+
+        /// <summary>启动服务，返回结果文本</summary>
+        public static string StartService()
+        {
+            return "启动服务：\n  " + RunSc("start " + ServiceName) +
+                   "\n当前状态：" + StateText(GetServiceState());
+        }
+
+        /// <summary>停止服务，返回结果文本</summary>
+        public static string StopService()
+        {
+            return "停止服务：\n  " + RunSc("stop " + ServiceName) +
+                   "\n当前状态：" + StateText(GetServiceState());
+        }
+
+        /// <summary>机器级注册 32 位 zkemkeeper COM 组件（LocalSystem 服务必需）</summary>
+        public static string RegisterCom()
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string dll = Path.GetFullPath(Path.Combine(baseDir, "..", "sdk_x86", "zkemkeeper.dll"));
+            if (!File.Exists(dll))
+                return "注册失败：未找到组件 " + dll;
+
+            string sysDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string regsvr32 = Path.Combine(sysDir, "regsvr32.exe");
+            // 64 位系统必须用 SysWOW64 下的 32 位 regsvr32 注册 32 位控件
+            string wow64 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+                "SysWOW64", "regsvr32.exe");
+            if (File.Exists(wow64)) regsvr32 = wow64;
+
+            string result = RunProcess("\"" + regsvr32 + "\"", "/s \"" + dll + "\"", 30000);
+            return "机器级注册中控 SDK COM 组件：\n  " + dll + "\n  " + result +
+                   "\n（/s 静默注册；若失败请确认已以管理员身份运行）";
+        }
+
+        public static string StateText(ServiceState state)
+        {
+            switch (state)
+            {
+                case ServiceState.Running: return "运行中";
+                case ServiceState.Stopped: return "已停止";
+                case ServiceState.NotInstalled: return "未安装";
+                default: return "未知";
+            }
+        }
+
+        // ==================== GUI 提权执行通道 ====================
+
+        /// <summary>提权动作结果文件的命令行参数前缀</summary>
+        public const string ElevatedActionPrefix = "elevated-";
+
+        /// <summary>
+        /// 提权执行指定动作。若当前非管理员，以 runas 动词拉起本程序的高权限副本执行，
+        /// 子进程把结果写入 resultFile，父进程等待并读取后返回给界面显示。
+        /// 已具备管理员权限时直接就地执行。
+        /// </summary>
+        public static string ExecuteWithElevation(string action)
+        {
+            if (IsAdministrator())
+                return ExecuteAction(action);
+
+            string resultFile = Path.Combine(Path.GetTempPath(),
+                "zktimesync_elevated_" + Guid.NewGuid().ToString("N") + ".txt");
+            try
+            {
+                if (File.Exists(resultFile)) File.Delete(resultFile);
+
+                System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo();
+                psi.FileName = Application.ExecutablePath;
+                psi.Arguments = "-" + ElevatedActionPrefix + action + " \"" + resultFile + "\"";
+                psi.Verb = "runas";
+                psi.UseShellExecute = true;
+                psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+
+                System.Diagnostics.Process p = System.Diagnostics.Process.Start(psi);
+                if (!p.WaitForExit(60000))
+                {
+                    try { p.Kill(); } catch (Exception) { }
+                    return "提权操作超时（60 秒）。请检查是否弹出了用户账户控制窗口。";
+                }
+
+                if (!File.Exists(resultFile))
+                    return "提权进程未写回结果。可能取消了用户账户控制授权，或被安全软件拦截。";
+
+                string result = File.ReadAllText(resultFile);
+                File.Delete(resultFile);
+                return result;
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                // 错误码 1223 = 用户取消了 UAC 提示
+                if (ex.NativeErrorCode == 1223)
+                    return "已取消授权。安装/卸载服务需要管理员权限，操作未执行。";
+                return "提权失败：" + ex.Message;
+            }
+            catch (Exception ex)
+            {
+                return "提权执行失败：" + ex.Message;
+            }
+        }
+
+        /// <summary>按动作名执行，返回结果文本（提权子进程与就地调用共用）</summary>
+        public static string ExecuteAction(string action)
+        {
+            switch (action)
+            {
+                case "install": return InstallService();
+                case "uninstall": return UninstallService();
+                case "start": return StartService();
+                case "stop": return StopService();
+                case "regcom": return RegisterCom();
+                default: return "未知操作：" + action;
+            }
+        }
+
+        /// <summary>提权子进程入口：执行动作并把结果写入父进程指定的文件</summary>
+        public static void RunElevatedChild(string action, string resultFile)
+        {
+            string result;
+            try { result = ExecuteAction(action); }
+            catch (Exception ex) { result = "操作执行异常：" + ex.Message; }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(resultFile))
+                    File.WriteAllText(resultFile, result, System.Text.Encoding.UTF8);
+            }
+            catch (Exception) { }
         }
     }
 }

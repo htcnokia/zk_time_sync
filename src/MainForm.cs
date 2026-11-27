@@ -441,7 +441,11 @@ namespace ZkTimeSync
             _lblPageTitle.Text = PageTitles[index];
             _lblPageSubtitle.Text = PageSubtitles[index];
 
-            if (index == PageSchedule) RefreshSchedulePreview();
+            if (index == PageSchedule)
+            {
+                RefreshSchedulePreview();
+                RefreshServiceState();
+            }
             if (index == PageDevices) UpdateDeviceHint();
         }
 
